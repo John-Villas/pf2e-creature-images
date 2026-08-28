@@ -1,0 +1,115 @@
+.pf2e-creature-images-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pf2e-creature-images-form input {
+  width: 100%;
+}
+
+.pf2e-creature-images-sync {
+  flex: 1;
+}
+
+.pf2e-ci-catalog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.pf2e-ci-toolbar,
+.pf2e-ci-footer,
+.pf2e-ci-entry,
+.pf2e-ci-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf2e-ci-search {
+  flex: 1;
+}
+
+.pf2e-ci-search input {
+  flex: 1;
+}
+
+.pf2e-ci-count {
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.pf2e-ci-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pf2e-ci-entry {
+  flex: 0 0 auto;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-light-2);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.pf2e-ci-entry[hidden] {
+  display: none;
+}
+
+.pf2e-ci-preview,
+.pf2e-ci-preview img {
+  width: 64px;
+  height: 64px;
+}
+
+.pf2e-ci-preview img {
+  object-fit: contain;
+  border: 0;
+}
+
+.pf2e-ci-details {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.pf2e-ci-details code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.pf2e-ci-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pf2e-ci-actions button {
+  width: 2.25rem;
+  margin: 0;
+}
+
+.pf2e-ci-footer button {
+  flex: 1;
+  margin: 0;
+}
+
+.pf2e-ci-empty {
+  margin: auto;
+  text-align: center;
+  opacity: 0.65;
+  font-size: 1.1rem;
+}
+
+.pf2e-ci-empty i {
+  font-size: 3rem;
+}

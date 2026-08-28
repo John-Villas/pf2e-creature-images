@@ -1,0 +1,66 @@
+name: Publicar módulo
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da versão, por exemplo v0.2.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preparar pacote
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-${GITHUB_REF_NAME}}"
+          VERSION="${TAG#v}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Tag inválida: $TAG" >&2
+            exit 1
+          fi
+
+          mkdir -p .release/module
+          cp -R scripts styles templates README.md .release/module/
+          cp module.json .release/module/module.json
+          export TAG VERSION
+
+          node -e '
+            const fs = require("fs");
+            const path = ".release/module/module.json";
+            const manifest = JSON.parse(fs.readFileSync(path, "utf8"));
+            manifest.version = process.env.VERSION;
+            manifest.download = `https://github.com/John-Villas/pf2e-creature-images/releases/download/${process.env.TAG}/pf2e-creature-images.zip`;
+            fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n");
+          ' 
+
+          cp .release/module/module.json .release/module.json
+          cd .release/module
+          zip -r ../pf2e-creature-images.zip .
+
+      - name: Criar GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          TAG="${INPUT_TAG:-${GITHUB_REF_NAME}}"
+          gh release create "$TAG" \
+            .release/module.json \
+            .release/pf2e-creature-images.zip \
+            --title "$TAG" \
+            --generate-notes

@@ -1,0 +1,46 @@
+<form class="pf2e-ci-catalog" autocomplete="off">
+  <header class="pf2e-ci-toolbar">
+    <label class="pf2e-ci-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" data-action="search" placeholder="Pesquisar criatura, compêndio ou UUID">
+    </label>
+    <span class="pf2e-ci-count">{{count}} associação(ões)</span>
+  </header>
+
+  <section class="pf2e-ci-list">
+    {{#each entries}}
+      <article class="pf2e-ci-entry" data-catalog-entry data-uuid="{{uuid}}"
+        data-name="{{name}}" data-search="{{search}}">
+        <a class="pf2e-ci-preview" href="{{image}}" target="_blank" rel="noopener">
+          <img src="{{image}}" alt="{{name}}" loading="lazy">
+        </a>
+        <div class="pf2e-ci-details">
+          <strong>{{name}}</strong>
+          <span>{{source}}</span>
+          <code title="{{uuid}}">{{uuid}}</code>
+          <small>Atualizado: {{updatedAt}}</small>
+        </div>
+        <div class="pf2e-ci-actions">
+          <button type="button" data-action="edit" title="Editar URL">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button type="button" data-action="remove" title="Remover associação">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </article>
+    {{else}}
+      <div class="pf2e-ci-empty">
+        <i class="fa-regular fa-images"></i>
+        <p>Nenhuma imagem foi associada ainda.</p>
+      </div>
+    {{/each}}
+  </section>
+
+  <footer class="pf2e-ci-footer">
+    <button type="button" data-action="sync"><i class="fa-solid fa-arrows-rotate"></i> Sincronizar atores</button>
+    <button type="button" data-action="import"><i class="fa-solid fa-file-import"></i> Importar JSON</button>
+    <button type="button" data-action="export"><i class="fa-solid fa-file-export"></i> Exportar JSON</button>
+    <input type="file" accept="application/json,.json" hidden>
+  </footer>
+</form>
