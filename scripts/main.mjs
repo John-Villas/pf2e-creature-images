@@ -26,10 +26,6 @@ Hooks.once("ready", async () => {
   catalog = foundry.utils.deepClone(game.settings.get(MODULE_ID, SETTING_CATALOG) ?? {});
   registerPf2eArtMappings();
 
-  // PF2e finishes rebuilding its module-art registry during world startup. Run
-  // once more on the next task so our entries cannot be lost to load order.
-  setTimeout(registerPf2eArtMappings, 0);
-
   game.modules.get(MODULE_ID).api = {
     associate: associateImage,
     exportCatalog,
@@ -39,7 +35,8 @@ Hooks.once("ready", async () => {
   };
 });
 
-Hooks.once("canvasReady", () => registerPf2eArtMappings());
+// PF2e clears and rebuilds this registry late in its ready lifecycle.
+Hooks.once("pf2e.systemReady", () => registerPf2eArtMappings());
 
 Hooks.on("preCreateActor", (actor) => {
   const sourceId = getSourceId(actor);
@@ -48,12 +45,14 @@ Hooks.on("preCreateActor", (actor) => {
 });
 
 Hooks.on("createActor", (actor, _options, userId) => {
-  if (userId !== game.user.id || actor.type !== "npc") return;
-  const sourceId = getSourceId(actor);
-  const entry = sourceId ? catalog[sourceId] : null;
-  if (entry?.image && isPlaceholder(actor.img)) {
-    runSafely(() => actor.update({ img: entry.image }));
-  }
+  if (actor.type !== "npc" || userId !== game.user.id) return;
+  setTimeout(() => {
+    const sourceId = getSourceId(actor);
+    const entry = sourceId ? catalog[sourceId] : null;
+    if (entry?.image && isPlaceholder(actor.img)) {
+      runSafely(() => actor.update({ img: entry.image }));
+    }
+  }, 0);
 });
 
 Hooks.on("getActorSheetHeaderButtons", (application, buttons) => {
@@ -161,7 +160,7 @@ function registerPf2eArtMappings() {
   if (!(artMap instanceof Map)) return;
 
   for (const [uuid, entry] of Object.entries(catalog)) {
-    if (entry?.image) artMap.set(uuid, { actor: entry.image });
+    if (entry?.image) artMap.set(uuid, { img: entry.image });
   }
 }
 
