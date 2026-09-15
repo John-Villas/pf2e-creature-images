@@ -41,7 +41,8 @@ Hooks.once("pf2e.systemReady", () => registerPf2eArtMappings());
 Hooks.on("preCreateActor", (actor) => {
   const sourceId = getSourceId(actor);
   const entry = sourceId ? catalog[sourceId] : null;
-  if (entry?.image && isPlaceholder(actor.img)) actor.updateSource({ img: entry.image });
+  const updates = getImageUpdates(actor, entry);
+  if (Object.keys(updates).length) actor.updateSource(updates);
 });
 
 Hooks.on("createActor", (actor, _options, userId) => {
@@ -49,8 +50,9 @@ Hooks.on("createActor", (actor, _options, userId) => {
   setTimeout(() => {
     const sourceId = getSourceId(actor);
     const entry = sourceId ? catalog[sourceId] : null;
-    if (entry?.image && isPlaceholder(actor.img)) {
-      runSafely(() => actor.update({ img: entry.image }));
+    const updates = getImageUpdates(actor, entry);
+    if (Object.keys(updates).length) {
+      runSafely(() => actor.update(updates));
     }
   }, 0);
 });
@@ -111,6 +113,23 @@ function isPlaceholder(path) {
     path.includes("systems/pf2e/icons/default-icons/");
 }
 
+function getImageUpdates(actor, entry, { overwrite = false } = {}) {
+  const updates = {};
+  if (entry?.image && (overwrite || isPlaceholder(actor.img))) updates.img = entry.image;
+  if (entry?.tokenImage) {
+    if (actor.prototypeToken?.ring?.enabled !== false) {
+      updates["prototypeToken.ring.enabled"] = false;
+    }
+    if (actor.prototypeToken?.texture?.src !== entry.tokenImage) {
+      updates["prototypeToken.texture.src"] = entry.tokenImage;
+    }
+    if (actor.prototypeToken?.ring?.subject?.texture !== entry.tokenImage) {
+      updates["prototypeToken.ring.subject.texture"] = entry.tokenImage;
+    }
+  }
+  return updates;
+}
+
 async function associateImage(actor) {
   if (!canAssociate(actor)) return;
 
@@ -121,6 +140,7 @@ async function associateImage(actor) {
   }
 
   const current = catalog[sourceId]?.image ?? (isPlaceholder(actor.img) ? "" : actor.img);
+  const currentToken = catalog[sourceId]?.tokenImage ?? "";
   const formData = await foundry.applications.api.DialogV2.input({
     window: { title: `Associar imagem: ${actor.name}` },
     content: `
@@ -129,6 +149,16 @@ async function associateImage(actor) {
         <input type="text" name="image" value="${foundry.utils.escapeHTML(current)}"
           placeholder="https://assets.forge-vtt.com/.../criatura.webp" autofocus>
         <p class="hint">Cole o endereço da Asset Library do Forge ou um caminho acessível pelo Foundry.</p>
+      </div>
+      <div class="form-group pf2e-creature-images-token-option">
+        <label><input type="checkbox" name="useTokenImage" ${currentToken ? "checked" : ""}>
+          Usar outra imagem para o token</label>
+        <div class="pf2e-creature-images-token-fields">
+          <label>URL ou caminho da imagem do token</label>
+          <input type="text" name="tokenImage" value="${foundry.utils.escapeHTML(currentToken)}"
+            placeholder="https://assets.forge-vtt.com/.../token.webp">
+          <p class="hint">A imagem será aplicada ao Image Path e ao Subject Texture do Prototype Token. O anel dinâmico será desativado ao salvar.</p>
+        </div>
       </div>`,
     ok: { label: "Salvar" },
     modal: true,
@@ -138,16 +168,25 @@ async function associateImage(actor) {
   const imageValue = formData.object?.image ?? formData.get?.("image") ?? formData.image;
   const image = String(imageValue ?? "").trim();
   if (!image) return;
+  const useTokenImage = formData.object?.useTokenImage ?? formData.get?.("useTokenImage") ?? formData.useTokenImage;
+  const tokenValue = formData.object?.tokenImage ?? formData.get?.("tokenImage") ?? formData.tokenImage;
+  const tokenImage = String(tokenValue ?? "").trim();
+  const tokenEnabled = [true, "true", "on", "1", 1].includes(useTokenImage);
+  if (tokenEnabled && !tokenImage) {
+    ui.notifications.warn("Informe a URL ou o caminho da imagem do token.");
+    return;
+  }
 
   catalog[sourceId] = {
     image,
+    ...(tokenEnabled ? { tokenImage } : {}),
     name: actor.name,
     updatedAt: new Date().toISOString(),
   };
   await saveCatalog();
   registerPf2eArtMappings();
 
-  if (!actor.pack) await actor.update({ img: image });
+  if (!actor.pack) await actor.update(getImageUpdates(actor, catalog[sourceId], { overwrite: true }));
   ui.notifications.info(`Imagem associada a ${actor.name}.`);
 }
 
@@ -171,8 +210,8 @@ async function syncWorldActors({ overwrite = false } = {}) {
   for (const actor of game.actors) {
     if (actor.type !== "npc") continue;
     const entry = catalog[getSourceId(actor)];
-    if (!entry?.image || (!overwrite && !isPlaceholder(actor.img))) continue;
-    updates.push({ _id: actor.id, img: entry.image });
+    const changes = getImageUpdates(actor, entry, { overwrite });
+    if (Object.keys(changes).length) updates.push({ _id: actor.id, ...changes });
   }
 
   if (!updates.length) {
@@ -214,7 +253,9 @@ async function importCatalog(data, { replace = false } = {}) {
 function isValidMapping([uuid, entry]) {
   return uuid.startsWith("Compendium.") &&
     entry && typeof entry === "object" &&
-    typeof entry.image === "string" && entry.image.length > 0;
+    typeof entry.image === "string" && entry.image.length > 0 &&
+    (entry.tokenImage === undefined ||
+      (typeof entry.tokenImage === "string" && entry.tokenImage.trim().length > 0));
 }
 
 class CatalogManager extends foundry.appv1.api.FormApplication {

@@ -8,6 +8,23 @@
   width: 100%;
 }
 
+.pf2e-creature-images-token-option,
+.pf2e-creature-images-token-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pf2e-creature-images-token-option > label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pf2e-creature-images-token-option:not(:has(input[name="useTokenImage"]:checked)) .pf2e-creature-images-token-fields {
+  display: none;
+}
+
 .pf2e-creature-images-sync {
   flex: 1;
 }

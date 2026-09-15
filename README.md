@@ -26,7 +26,16 @@ Compatível com Foundry VTT v13 e PF2e. O módulo:
 - oferece uma tela pesquisável para editar e remover associações;
 - importa e exporta o catálogo para transferi-lo entre mundos.
 
-Tokens não são modificados nesta versão.
+Na janela **Associar imagem**, marque **Usar outra imagem para o token** para
+informar uma imagem separada. Ela será salva em `tokenImage` no catálogo e
+aplicada aos campos **Image Path** e **Subject Texture** do Prototype Token,
+desativando o anel dinâmico para usar a arte fornecida diretamente. A associação vale para o ator editado,
+importações futuras e a sincronização de atores existentes. Tokens já colocados
+em cenas não são atualizados.
+
+Desmarcar a opção remove `tokenImage` da associação, mas não desfaz imagens
+já aplicadas ao Prototype Token nem reativa o anel. Catálogos antigos, sem esse campo, continuam
+alterando apenas o retrato.
 
 ## Instalação local para desenvolvimento
 
@@ -41,7 +50,8 @@ criatura importada do compêndio. No menu do cabeçalho, escolha **Associar
 imagem** e cole a URL da imagem.
 
 O botão **Sincronizar imagens** aparece no rodapé da aba de Atores e só altera
-retratos vazios ou genéricos.
+retratos vazios ou genéricos. Quando há uma imagem de token associada, ela é
+aplicada aos dois campos do Prototype Token, mesmo se já tiverem outra imagem.
 
 O catálogo completo fica em **Configurações → Configurar definições →
 Configurações do módulo → PF2e Creature Images → Abrir catálogo**.
