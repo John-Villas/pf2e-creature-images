@@ -33,8 +33,9 @@ desativando o anel dinâmico para usar a arte fornecida diretamente. A associaç
 importações futuras e a sincronização de atores existentes. Tokens já colocados
 em cenas não são atualizados.
 
-Desmarcar a opção remove `tokenImage` da associação, mas não desfaz imagens
-já aplicadas ao Prototype Token nem reativa o anel. Catálogos antigos, sem esse campo, continuam
+Desmarcar a opção remove `tokenImage` da associação. Ao salvar pela ficha de um
+ator do mundo, o Image Path passa a usar o retrato e o Subject Texture é limpo.
+Isso não reativa o anel. Catálogos antigos, sem esse campo, continuam
 alterando apenas o retrato.
 
 ## Instalação local para desenvolvimento

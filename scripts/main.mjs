@@ -113,7 +113,7 @@ function isPlaceholder(path) {
     path.includes("systems/pf2e/icons/default-icons/");
 }
 
-function getImageUpdates(actor, entry, { overwrite = false } = {}) {
+function getImageUpdates(actor, entry, { overwrite = false, clearToken = false } = {}) {
   const updates = {};
   if (entry?.image && (overwrite || isPlaceholder(actor.img))) updates.img = entry.image;
   if (entry?.tokenImage) {
@@ -126,6 +126,9 @@ function getImageUpdates(actor, entry, { overwrite = false } = {}) {
     if (actor.prototypeToken?.ring?.subject?.texture !== entry.tokenImage) {
       updates["prototypeToken.ring.subject.texture"] = entry.tokenImage;
     }
+  } else if (clearToken) {
+    updates["prototypeToken.texture.src"] = entry.image;
+    updates["prototypeToken.ring.subject.texture"] = "";
   }
   return updates;
 }
@@ -186,7 +189,12 @@ async function associateImage(actor) {
   await saveCatalog();
   registerPf2eArtMappings();
 
-  if (!actor.pack) await actor.update(getImageUpdates(actor, catalog[sourceId], { overwrite: true }));
+  if (!actor.pack) {
+    await actor.update(getImageUpdates(actor, catalog[sourceId], {
+      overwrite: true,
+      clearToken: !tokenEnabled,
+    }));
+  }
   ui.notifications.info(`Imagem associada a ${actor.name}.`);
 }
 

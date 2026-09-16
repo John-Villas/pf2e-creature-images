@@ -60,3 +60,13 @@ test("disables the ring even when both token image paths already match", () => {
   const result = vm.runInContext('getImageUpdates(actor, { image: "portrait.webp", tokenImage: "token.webp" })', context);
   assert.deepEqual(JSON.parse(JSON.stringify(result)), { "prototypeToken.ring.enabled": false });
 });
+
+test("unchecking on an existing actor replaces token artwork with the portrait and clears the subject", () => {
+  const { context } = setup();
+  const result = vm.runInContext('getImageUpdates({ img: "old.webp" }, { image: "portrait.webp" }, { overwrite: true, clearToken: true })', context);
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), {
+    img: "portrait.webp",
+    "prototypeToken.texture.src": "portrait.webp",
+    "prototypeToken.ring.subject.texture": "",
+  });
+});
